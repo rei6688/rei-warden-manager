@@ -1,0 +1,56 @@
+services:
+  # ── Vaultwarden ──────────────────────────────────────────────────────────────
+  vaultwarden:
+    image: vaultwarden/server:latest
+    container_name: vaultwarden
+    restart: unless-stopped
+    volumes:
+      - vw-data:/data
+    environment:
+      WEBSOCKET_ENABLED: "true"
+      SIGNUPS_ALLOWED: "true"
+    ports:
+      - "8080:80"
+    networks:
+      - warden-net
+
+  # ── Rei-Warden Backup Manager ─────────────────────────────────────────────────
+  rei-warden-manager:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: rei-warden-manager
+    restart: unless-stopped
+    volumes:
+      - vw-data:/vw-data:ro          # Vaultwarden data (read-only for backup)
+      - backups:/backups              # Local backup storage
+      - config:/config                # Persistent settings & rclone config
+      - logs:/var/log                 # Log persistence
+    environment:
+      PORT: 3001
+      APP_PASSWORD: ${APP_PASSWORD:-changeme}
+      JWT_SECRET: ${JWT_SECRET:-}
+      DATA_DIR: /vw-data
+      BACKUP_DIR: /backups
+      LOG_FILE: /var/log/backup.log
+      CONFIG_DIR: /config
+    ports:
+      - "3001:3001"
+    networks:
+      - warden-net
+    depends_on:
+      - vaultwarden
+
+networks:
+  warden-net:
+    driver: bridge
+
+volumes:
+  vw-data:
+    driver: local
+  backups:
+    driver: local
+  config:
+    driver: local
+  logs:
+    driver: local

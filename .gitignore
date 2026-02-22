@@ -1,0 +1,25 @@
+# Dependencies
+node_modules/
+frontend/node_modules/
+backend/node_modules/
+
+# Build output
+frontend/dist/
+frontend/.vite/
+
+# Environment files
+.env
+backend/.env
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+
+# rclone temp files
+/tmp/.rclone_import_*.conf
+
+# Editor
+.vscode/
+.idea/

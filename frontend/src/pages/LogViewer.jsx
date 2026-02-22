@@ -22,7 +22,7 @@ export default function LogViewer() {
   async function checkRunning() {
     try {
       const data = await getStatus();
-      setIsRunning(data.status === 'running');
+      setIsRunning(data.is_running === true);
     } catch {
       // ignore
     }

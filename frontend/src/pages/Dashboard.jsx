@@ -8,8 +8,7 @@ function formatDate(ts) {
 }
 
 function formatBytes(bytes) {
-  if (bytes == null) return 'Unknown';
-  if (bytes === 0) return '0 B';
+  if (bytes == null || bytes === 0) return '0 B';
   const k = 1024;
   const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
@@ -35,7 +34,7 @@ export default function Dashboard() {
     try {
       const data = await getStatus();
       setStatus(data);
-      if (data.status === 'running') {
+      if (data.is_running) {
         setProgress((prev) => Math.min(prev + 10, 90));
       } else {
         setProgress(data.status === 'success' ? 100 : 0);
@@ -53,10 +52,10 @@ export default function Dashboard() {
 
   // Poll faster when running
   useEffect(() => {
-    if (status?.status !== 'running') return;
+    if (!status?.is_running) return;
     const interval = setInterval(fetchStatus, 2000);
     return () => clearInterval(interval);
-  }, [status?.status, fetchStatus]);
+  }, [status?.is_running, fetchStatus]);
 
   async function handleRunBackup() {
     setError('');
@@ -72,7 +71,10 @@ export default function Dashboard() {
     }
   }
 
-  const isRunning = running || status?.status === 'running';
+  const isRunning = running || status?.is_running;
+  const statusLabel = isRunning ? 'Running' : (status?.status
+    ? status.status.charAt(0).toUpperCase() + status.status.slice(1)
+    : 'Unknown');
 
   return (
     <div className="p-6 max-w-4xl mx-auto">
@@ -87,18 +89,17 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
         <StatusCard
           title="Last Backup"
-          value={formatDate(status?.lastBackup?.timestamp)}
-          subtitle={status?.lastBackup?.remote || ''}
+          value={formatDate(status?.last_backup)}
         />
         <StatusCard
           title="Backup Status"
-          value={status?.status ? status.status.charAt(0).toUpperCase() + status.status.slice(1) : 'Unknown'}
-          valueColor={getStatusColor(status?.status)}
+          value={statusLabel}
+          valueColor={isRunning ? 'yellow' : getStatusColor(status?.status)}
         />
         <StatusCard
           title="Storage Used"
-          value={formatBytes(status?.lastBackup?.size)}
-          subtitle="Last backup size"
+          value={formatBytes(status?.storage_used)}
+          subtitle="Local backup size"
         />
       </div>
 
@@ -134,6 +135,10 @@ export default function Dashboard() {
           '▶ Run Manual Backup Now'
         )}
       </button>
+
+      {status?.last_message && (
+        <p className="mt-4 text-sm text-gray-400">{status.last_message}</p>
+      )}
     </div>
   );
 }

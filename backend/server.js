@@ -18,6 +18,7 @@ const DATA_DIR = process.env.DATA_DIR || "/vw-data";
 const BACKUP_DIR = process.env.BACKUP_DIR || "/backups";
 const LOG_FILE = process.env.LOG_FILE || "/var/log/backup.log";
 const CONFIG_DIR = process.env.CONFIG_DIR || "/config";
+const STATIC_DIR = process.env.STATIC_DIR || null;
 const SETTINGS_FILE = path.join(CONFIG_DIR, "settings.json");
 
 // Warn if falling back to a random JWT secret — tokens won't survive restarts
@@ -105,6 +106,11 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// Serve built frontend if STATIC_DIR is set
+if (STATIC_DIR && fs.existsSync(STATIC_DIR)) {
+  app.use(express.static(STATIC_DIR));
+}
+
 // ── Rate limiter on auth ───────────────────────────────────────────────────────
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
@@ -180,11 +186,11 @@ app.get("/api/logs", (req, res) => {
   const lines = parseInt(req.query.lines || "200", 10);
   try {
     if (!fs.existsSync(LOG_FILE)) {
-      return res.json({ lines: [] });
+      return res.json({ logs: [] });
     }
     const content = fs.readFileSync(LOG_FILE, "utf8");
     const all = content.split("\n").filter(Boolean);
-    return res.json({ lines: all.slice(-lines) });
+    return res.json({ logs: all.slice(-lines) });
   } catch (e) {
     return res.status(500).json({ error: `Could not read log file: ${e.message}` });
   }
@@ -395,21 +401,22 @@ app.get("/api/config/remote/:name/folders", async (req, res) => {
 // ── Retention – get ───────────────────────────────────────────────────────────
 app.get("/api/config/retention", (req, res) => {
   const settings = loadSettings();
-  res.json({ retention: settings.retention || { days: 30 } });
+  const r = settings.retention || { days: 30, cron: "" };
+  res.json({ days: r.days ?? 30, cron: r.cron || "" });
 });
 
 // ── Retention – set ───────────────────────────────────────────────────────────
 app.post("/api/config/retention", (req, res) => {
-  const { days, schedule } = req.body || {};
+  const { days, cron } = req.body || {};
   if (days === undefined || isNaN(Number(days)) || Number(days) < 0) {
     return res.status(400).json({ error: "Field 'days' must be a non-negative number." });
   }
 
   const settings = loadSettings();
-  settings.retention = { days: Number(days), schedule: schedule || settings.retention?.schedule || "" };
+  settings.retention = { days: Number(days), cron: cron || settings.retention?.cron || "" };
   saveSettings(settings);
-  applySchedule(settings.retention.schedule);
-  res.json({ message: "Retention policy saved.", retention: settings.retention });
+  applySchedule(settings.retention.cron);
+  res.json({ message: "Retention policy saved.", days: settings.retention.days, cron: settings.retention.cron });
 });
 
 // ── rclone config writer ──────────────────────────────────────────────────────
@@ -462,8 +469,13 @@ function applySchedule(cronExpression) {
   appendLog(`Scheduled backup configured: ${cronExpression}`);
 }
 
-// ── Catch-all ─────────────────────────────────────────────────────────────────
-app.use((req, res) => res.status(404).json({ error: "Not found." }));
+// ── Catch-all: serve SPA index.html for non-API routes ───────────────────────
+app.use((req, res) => {
+  if (STATIC_DIR && fs.existsSync(path.join(STATIC_DIR, "index.html"))) {
+    return res.sendFile(path.join(STATIC_DIR, "index.html"));
+  }
+  res.status(404).json({ error: "Not found." });
+});
 
 // ── Global error handler ──────────────────────────────────────────────────────
 // eslint-disable-next-line no-unused-vars
@@ -478,8 +490,8 @@ app.listen(PORT, () => {
   appendLog(`Server started on port ${PORT}`);
   // Restore any scheduled backup from persisted settings
   const settings = loadSettings();
-  if (settings.retention && settings.retention.schedule) {
-    applySchedule(settings.retention.schedule);
+  if (settings.retention && settings.retention.cron) {
+    applySchedule(settings.retention.cron);
   }
 });
 
