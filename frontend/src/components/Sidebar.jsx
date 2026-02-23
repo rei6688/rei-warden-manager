@@ -16,7 +16,7 @@ export default function Sidebar() {
   }
 
   return (
-    <aside className="w-56 min-h-screen bg-gray-800 border-r border-gray-700 flex flex-col">
+    <aside className="w-56 min-h-screen bg-gray-800 border-r border-gray-700 flex flex-col relative z-20">
       <div className="p-4 border-b border-gray-700">
         <div className="text-xl text-center">🛡️</div>
         <h1 className="text-sm font-bold text-white text-center leading-tight mt-1">
@@ -45,7 +45,7 @@ export default function Sidebar() {
         ))}
       </nav>
 
-      <div className="p-3 border-t border-gray-700">
+      <div className="p-3 border-t border-gray-700 relative z-20">
         <button
           onClick={handleLogout}
           className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white transition-colors"

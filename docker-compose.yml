@@ -23,8 +23,9 @@ services:
     restart: unless-stopped
     volumes:
       - vw-data:/vw-data:ro          # Vaultwarden data (read-only for backup)
-      - backups:/backups              # Local backup storage
-      - config:/config                # Persistent settings & rclone config
+      - backups:/backups              # Local backup staging
+      - config:/app/config            # Persistent settings & password hash
+      - rclone-config:/root/.config/rclone  # Rclone configuration
       - logs:/var/log                 # Log persistence
     environment:
       PORT: 3001
@@ -33,7 +34,8 @@ services:
       DATA_DIR: /vw-data
       BACKUP_DIR: /backups
       LOG_FILE: /var/log/backup.log
-      CONFIG_DIR: /config
+      CONFIG_DIR: /app/config
+      RCLONE_CONFIG_FILE: /root/.config/rclone/rclone.conf
     ports:
       - "3001:3001"
     networks:
@@ -51,6 +53,8 @@ volumes:
   backups:
     driver: local
   config:
+    driver: local
+  rclone-config:
     driver: local
   logs:
     driver: local

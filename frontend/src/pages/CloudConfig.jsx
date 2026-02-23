@@ -12,9 +12,8 @@ const SETUP_GUIDES = {
   ],
   'Dropbox': [
     'Go to https://www.dropbox.com/developers → Create a new app (Full Dropbox access).',
-    'In the app settings, copy the App Key and App Secret.',
-    'Run `rclone authorize "dropbox" --client-id APP_KEY --client-secret APP_SECRET` locally to get the token.',
-    'Paste App Key, App Secret, and the generated token below.',
+    'Run `rclone authorize "dropbox"` locally to get the token JSON.',
+    'Copy the ENTIRE JSON response and paste it below. Client ID/Secret are optional.',
   ],
   'OneDrive': [
     'Go to Azure Portal → App Registrations → New registration (Accounts in any org directory).',
@@ -63,8 +62,7 @@ export default function CloudConfig() {
   function handleChange(e) {
     const { name, value } = e.target;
     setForm((f) => ({ ...f, [name]: value }));
-    // Reset guide when type changes
-    if (name === 'type') setGuideOpen(false); // Reset guide when switching providers to avoid stale instructions
+    if (name === 'type') setGuideOpen(false);
   }
 
   async function handleAdd(e) {
@@ -101,8 +99,8 @@ export default function CloudConfig() {
     try {
       await testRemote(name);
       setTestResults((r) => ({ ...r, [name]: 'success' }));
-    } catch {
-      setTestResults((r) => ({ ...r, [name]: 'failed' }));
+    } catch (err) {
+      setTestResults((r) => ({ ...r, [name]: err.message }));
     } finally {
       setTesting((t) => ({ ...t, [name]: false }));
     }
@@ -139,8 +137,8 @@ export default function CloudConfig() {
                   {testResults[remote.name] === 'success' && (
                     <span className="text-green-500 text-xs font-medium">✓ OK</span>
                   )}
-                  {testResults[remote.name] === 'failed' && (
-                    <span className="text-red-500 text-xs font-medium">✗ Failed</span>
+                  {typeof testResults[remote.name] === 'string' && testResults[remote.name] !== 'success' && (
+                    <span className="text-red-500 text-xs font-medium" title={testResults[remote.name]}>✗ Failed</span>
                   )}
                   <button
                     onClick={() => handleTest(remote.name)}
@@ -163,7 +161,7 @@ export default function CloudConfig() {
       </div>
 
       {/* Add Remote Form */}
-      <div className="bg-gray-800 border border-gray-700 rounded-xl p-5">
+      <div className="bg-gray-800 border border-gray-700 rounded-xl p-5 relative z-10">
         <h3 className="text-lg font-semibold text-white mb-4">Add Remote</h3>
         {error && (
           <div className="mb-4 p-3 bg-red-900 border border-red-700 rounded-lg text-red-300 text-sm">
@@ -184,7 +182,7 @@ export default function CloudConfig() {
                 value={form.name}
                 onChange={handleChange}
                 className={inputCls}
-                placeholder="e.g. my-gdrive"
+                placeholder="e.g. dropbox_backup"
                 required
               />
             </div>
@@ -238,25 +236,16 @@ export default function CloudConfig() {
               </div>
               <div>
                 <label className={labelCls}>OAuth Token (JSON)</label>
-                <input name="token" value={form.token} onChange={handleChange} className={inputCls} placeholder='{"access_token":"..."}' />
+                <textarea name="token" value={form.token} onChange={handleChange} className={inputCls + ' font-mono text-xs'} rows="3" placeholder='{"access_token":"..."}' />
               </div>
             </>
           )}
 
           {form.type === 'Dropbox' && (
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className={labelCls}>App Key</label>
-                <input name="appKey" value={form.appKey} onChange={handleChange} className={inputCls} placeholder="Dropbox App Key" />
-              </div>
-              <div>
-                <label className={labelCls}>App Secret</label>
-                <input name="appSecret" value={form.appSecret} onChange={handleChange} className={inputCls} placeholder="Dropbox App Secret" />
-              </div>
-              <div className="col-span-2">
-                <label className={labelCls}>Token</label>
-                <input name="token" value={form.token} onChange={handleChange} className={inputCls} placeholder="Dropbox access token" />
-              </div>
+            <div>
+              <label className={labelCls}>Access Token (JSON - REQUIRED)</label>
+              <textarea name="token" value={form.token} onChange={handleChange} className={inputCls + ' font-mono text-xs'} rows="4" placeholder='{"access_token":"..."}' />
+              <p className="text-xs text-gray-500 mt-1">Paste the complete JSON output from: rclone authorize dropbox</p>
             </div>
           )}
 
@@ -273,6 +262,10 @@ export default function CloudConfig() {
               <div className="col-span-2">
                 <label className={labelCls}>Tenant <span className="text-gray-500">(optional)</span></label>
                 <input name="tenant" value={form.tenant} onChange={handleChange} className={inputCls} placeholder="common" />
+              </div>
+              <div className="col-span-2">
+                <label className={labelCls}>OAuth Token (JSON)</label>
+                <textarea name="token" value={form.token} onChange={handleChange} className={inputCls + ' font-mono text-xs'} rows="3" placeholder='{"access_token":"..."}' />
               </div>
             </div>
           )}

@@ -57,7 +57,10 @@ export async function addRemote(data) {
     headers: authHeaders(),
     body: JSON.stringify(data),
   });
-  if (!res.ok) throw new Error('Failed to add remote');
+  if (!res.ok) {
+    const json = await res.json().catch(() => ({}));
+    throw new Error(json.error || 'Failed to add remote');
+  }
   return res.json();
 }
 
@@ -75,7 +78,10 @@ export async function testRemote(name) {
     method: 'POST',
     headers: authHeaders(),
   });
-  if (!res.ok) throw new Error('Connection test failed');
+  if (!res.ok) {
+    const json = await res.json().catch(() => ({}));
+    throw new Error(json.error || 'Connection test failed');
+  }
   return res.json();
 }
 

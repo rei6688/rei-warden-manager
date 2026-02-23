@@ -98,7 +98,17 @@ function getPasswordHashFromSettings() {
 
 function getRcloneCommand(args) {
   const safeConfig = shellEscapePath(RCLONE_CONFIG_FILE);
-  return `RCLONE_CONFIG="${safeConfig}" rclone ${args}`;
+  return `RCLONE_CONFIG="${safeConfig}" rclone --config="${safeConfig}" ${args}`;
+}
+
+function validateDropboxToken(tokenStr) {
+  if (!tokenStr) throw new Error("Dropbox token is required");
+  try {
+    JSON.parse(tokenStr);
+    return true;
+  } catch {
+    throw new Error("Invalid Dropbox token: must be valid JSON");
+  }
 }
 
 function rcloneConfigExists() {
@@ -526,6 +536,18 @@ app.post("/api/config/remote", (req, res) => {
     return res.status(400).json({ error: e.message });
   }
 
+  if (type === "Dropbox" || type === "dropbox") {
+    try {
+      if (credentials && credentials.token) {
+        validateDropboxToken(credentials.token);
+      } else {
+        return res.status(400).json({ error: "Dropbox token (JSON) is required." });
+      }
+    } catch (err) {
+      return res.status(400).json({ error: err.message });
+    }
+  }
+
   const settings = loadSettings();
   settings.remotes = settings.remotes || [];
 
@@ -538,11 +560,11 @@ app.post("/api/config/remote", (req, res) => {
     settings.remotes.push(entry);
   }
 
-  // Write rclone config entry
   try {
     writeRcloneConfig(entry);
   } catch (e) {
     appendLog(`Warning: could not write rclone config for ${name}: ${e.message}`);
+    return res.status(500).json({ error: `Failed to write rclone config: ${e.message}` });
   }
 
   saveSettings(settings);
@@ -671,16 +693,43 @@ app.get("/api/system/disk", async (req, res) => {
   res.json(disk || { total: 0, used: 0, available: 0 });
 });
 
+function convertCredentialsForRclone(remote) {
+  const creds = remote.credentials || {};
+  const rcloneConfig = {};
+
+  if (remote.type === "Dropbox" || remote.type === "dropbox") {
+    if (creds.token) rcloneConfig.token = creds.token;
+  } else if (remote.type === "Google Drive") {
+    if (creds.clientId) rcloneConfig.client_id = creds.clientId;
+    if (creds.clientSecret) rcloneConfig.client_secret = creds.clientSecret;
+    if (creds.token) rcloneConfig.token = creds.token;
+  } else if (remote.type === "OneDrive") {
+    if (creds.clientId) rcloneConfig.client_id = creds.clientId;
+    if (creds.clientSecret) rcloneConfig.client_secret = creds.clientSecret;
+    if (creds.token) rcloneConfig.token = creds.token;
+    if (creds.tenant) rcloneConfig.tenant = creds.tenant;
+  }
+
+  return rcloneConfig;
+}
+
 // ── rclone config writer ──────────────────────────────────────────────────────
 function writeRcloneConfig(remote) {
-  // Build a minimal rclone config snippet and write it to a secure temp file
   validateRemoteName(remote.name);
-  const creds = remote.credentials || {};
-  // Sanitize type and credential values: strip newlines and carriage returns to
-  // prevent config injection via user-supplied values.
-  const safeType = String(remote.type || "").replace(/[\r\n]/g, "");
-  let config = `[${remote.name}]\ntype = ${safeType}\n`;
-  for (const [k, v] of Object.entries(creds)) {
+  
+  let rcloneType = remote.type;
+  if (rcloneType === "Dropbox" || rcloneType === "dropbox") {
+    rcloneType = "dropbox";
+  } else if (rcloneType === "Google Drive") {
+    rcloneType = "drive";
+  } else if (rcloneType === "OneDrive") {
+    rcloneType = "onedrive";
+  }
+
+  const rcloneConfig = convertCredentialsForRclone(remote);
+
+  let config = `[${remote.name}]\ntype = ${rcloneType}\n`;
+  for (const [k, v] of Object.entries(rcloneConfig)) {
     const safeKey = String(k).replace(/[\r\n=]/g, "");
     const safeVal = String(v).replace(/[\r\n]/g, "");
     if (safeKey) config += `${safeKey} = ${safeVal}\n`;
@@ -710,7 +759,25 @@ function writeRcloneConfig(remote) {
   try {
     fs.writeFileSync(RCLONE_CONFIG_FILE, updated, { mode: 0o600 });
   } catch (e) {
-    appendLog(`Warning: could not write rclone config for ${remote.name}: ${e.message}`);
+    throw new Error(`Failed to write rclone config: ${e.message}`);
+  }
+}
+
+function syncRemotesOnStartup() {
+  try {
+    appendLog("Syncing remotes from settings to rclone.conf...");
+    const settings = loadSettings();
+    const remotes = settings.remotes || [];
+    for (const remote of remotes) {
+      try {
+        writeRcloneConfig(remote);
+        appendLog(`Synced remote: ${remote.name}`);
+      } catch (e) {
+        appendLog(`Warning: could not sync remote ${remote.name}: ${e.message}`);
+      }
+    }
+  } catch (e) {
+    appendLog(`Warning: could not sync remotes: ${e.message}`);
   }
 }
 
@@ -762,7 +829,9 @@ app.use((err, req, res, next) => {
 app.listen(PORT, () => {
   console.log(`Rei-Warden backend listening on port ${PORT}`);
   appendLog(`Server started on port ${PORT}`);
-  // Restore any scheduled backup from persisted settings
+  
+  syncRemotesOnStartup();
+  
   const settings = loadSettings();
   if (settings.retention && settings.retention.cron) {
     applySchedule(settings.retention.cron);

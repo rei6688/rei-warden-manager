@@ -31,12 +31,9 @@ COPY backend/server.js ./
 # Copy built frontend into a static directory served by backend
 COPY --from=frontend-builder /build/frontend/dist ./public
 
-# Serve static files from backend (add static middleware)
-# The server already handles API routes; we add a static fallback for the frontend.
-# This is handled at runtime via express.static in server.js (see ENV below).
-
-# Create necessary directories
-RUN mkdir -p /vw-data /backups /config /var/log
+# Create necessary directories for config and rclone
+RUN mkdir -p /vw-data /backups /app/config /root/.config/rclone /var/log && \
+    chmod 700 /root/.config/rclone
 
 # Expose app port
 EXPOSE 3001
@@ -48,7 +45,8 @@ ENV PORT=3001 \
     DATA_DIR=/vw-data \
     BACKUP_DIR=/backups \
     LOG_FILE=/var/log/backup.log \
-    CONFIG_DIR=/config \
+    CONFIG_DIR=/app/config \
+    RCLONE_CONFIG_FILE=/root/.config/rclone/rclone.conf \
     STATIC_DIR=/app/public
 
 CMD ["node", "server.js"]
