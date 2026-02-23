@@ -1,0 +1,28 @@
+{
+  "remotes": [
+    {
+      "name": "test_dropbox",
+      "type": "Dropbox",
+      "folder": "/backups",
+      "credentials": {
+        "token": "{\"access_token\":\"mock_token\"}"
+      }
+    }
+  ],
+  "retention": {
+    "days": 30
+  },
+  "telegram": {},
+  "history": [
+    {
+      "timestamp": "2026-02-23T15:29:12.581Z",
+      "status": "success",
+      "fileName": "backup-2026-02-23T15-29-12-567Z.tar.gz",
+      "fileSize": 43,
+      "duration": 0,
+      "destinations": [
+        "test_dropbox"
+      ]
+    }
+  ]
+}
