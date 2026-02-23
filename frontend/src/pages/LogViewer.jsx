@@ -29,8 +29,11 @@ export default function LogViewer() {
   }
 
   useEffect(() => {
-    fetchLogs();
-    checkRunning();
+    const timeout = setTimeout(() => {
+      fetchLogs();
+      checkRunning();
+    }, 0);
+    return () => clearTimeout(timeout);
   }, [fetchLogs]);
 
   // Poll every 3 seconds when backup is running

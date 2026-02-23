@@ -19,9 +19,10 @@ const APP_PASSWORD = process.env.APP_PASSWORD || "admin";
 const DATA_DIR = process.env.DATA_DIR || "/vw-data";
 const BACKUP_DIR = process.env.BACKUP_DIR || "/backups";
 const LOG_FILE = process.env.LOG_FILE || "/var/log/backup.log";
-const CONFIG_DIR = process.env.CONFIG_DIR || "/config";
+const CONFIG_DIR = process.env.CONFIG_DIR || "/app/config";
 const STATIC_DIR = process.env.STATIC_DIR || null;
 const SETTINGS_FILE = path.join(CONFIG_DIR, "settings.json");
+const RCLONE_CONFIG_FILE = process.env.RCLONE_CONFIG_FILE || "/root/.config/rclone/rclone.conf";
 
 // Warn if falling back to a random JWT secret — tokens won't survive restarts
 let JWT_SECRET = process.env.JWT_SECRET;
@@ -67,6 +68,10 @@ function shellEscapePath(p) {
   return p.replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/\$/g, "\\$").replace(/`/g, "\\`");
 }
 
+function escapeRegExp(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 function loadSettings() {
   try {
     ensureDir(CONFIG_DIR);
@@ -77,6 +82,34 @@ function loadSettings() {
     appendLog(`Warning: could not load settings: ${e.message}`);
   }
   return { remotes: [], retention: { days: 30 }, telegram: {}, history: [] };
+}
+
+function getPasswordHashFromSettings() {
+  try {
+    if (!fs.existsSync(SETTINGS_FILE)) return null;
+    const parsed = JSON.parse(fs.readFileSync(SETTINGS_FILE, "utf8"));
+    const hash = parsed && typeof parsed.passwordHash === "string" ? parsed.passwordHash.trim() : "";
+    return hash || null;
+  } catch (e) {
+    appendLog(`Warning: could not read password hash: ${e.message}`);
+    return null;
+  }
+}
+
+function getRcloneCommand(args) {
+  const safeConfig = shellEscapePath(RCLONE_CONFIG_FILE);
+  return `RCLONE_CONFIG="${safeConfig}" rclone ${args}`;
+}
+
+function rcloneConfigExists() {
+  return fs.existsSync(RCLONE_CONFIG_FILE);
+}
+
+function rcloneConfigHasRemote(remoteName) {
+  if (!rcloneConfigExists()) return false;
+  const content = fs.readFileSync(RCLONE_CONFIG_FILE, "utf8");
+  const pattern = new RegExp(`^\\[${escapeRegExp(remoteName)}\\]$`, "m");
+  return pattern.test(content);
 }
 
 // ── Telegram notification ─────────────────────────────────────────────────────
@@ -183,8 +216,7 @@ app.post("/api/auth/login", authLimiter, async (req, res) => {
   if (!password) return res.status(400).json({ error: "Password is required." });
 
   // Prefer password hash stored in settings.json; fall back to APP_PASSWORD env var.
-  const settings = loadSettings();
-  const storedPassword = settings.passwordHash || APP_PASSWORD;
+  const storedPassword = getPasswordHashFromSettings() || APP_PASSWORD;
 
   // Support both plain-text and bcrypt-hashed passwords.
   // Detect bcrypt by checking for the full versioned prefix ($2a$, $2b$, $2y$).
@@ -212,7 +244,7 @@ app.post("/api/auth/change-password", async (req, res) => {
   }
 
   const settings = loadSettings();
-  const storedPassword = settings.passwordHash || APP_PASSWORD;
+  const storedPassword = getPasswordHashFromSettings() || APP_PASSWORD;
 
   let valid = false;
   if (/^\$2[aby]\$\d{2}\$/.test(storedPassword)) {
@@ -286,8 +318,29 @@ app.post("/api/backup/run", (req, res) => {
 
   const settings = loadSettings();
   const activeRemotes = settings.remotes || [];
+  const missing = [];
+  if (!rcloneConfigExists()) {
+    missing.push(`Missing rclone config at ${RCLONE_CONFIG_FILE}`);
+  }
   if (activeRemotes.length === 0) {
-    return res.status(422).json({ error: "No rclone remotes configured." });
+    missing.push("No rclone remotes configured");
+  } else {
+    activeRemotes.forEach((remote, index) => {
+      const name = (remote && remote.name ? String(remote.name).trim() : "");
+      if (!name) {
+        missing.push(`Remote entry at index ${index} is missing a name`);
+        return;
+      }
+      if (!rcloneConfigHasRemote(name)) {
+        missing.push(`Remote "${name}" not found in rclone config`);
+      }
+    });
+  }
+  if (missing.length > 0) {
+    const detail = `Backup prerequisites missing: ${missing.join("; ")}`;
+    console.error(detail);
+    appendLog(detail);
+    return res.status(422).json({ error: detail });
   }
 
   // Respond immediately and run in background
@@ -305,7 +358,7 @@ async function runBackup(settings) {
 
   try {
     // 1. Check rclone availability
-    await execPromise("rclone version").catch(() => {
+    await execPromise(getRcloneCommand("version")).catch(() => {
       throw new Error("rclone is not installed or not in PATH.");
     });
 
@@ -337,7 +390,9 @@ async function runBackup(settings) {
       const safeFolder = shellEscapePath(remote.folder || "");
       const remotePath = `${remote.name}:${safeFolder}`;
       appendLog(`Uploading to remote: ${remotePath}`);
-      await execPromise(`rclone copy "${safeArchive}" "${remotePath}"`, { timeout: 1800000 });
+      await execPromise(getRcloneCommand(`copy "${safeArchive}" "${remotePath}"`), {
+        timeout: 1800000,
+      });
       appendLog(`Upload to ${remotePath} complete.`);
     }
 
@@ -432,14 +487,18 @@ async function applyRetention(remotes, days) {
     const remotePath = `${remote.name}:${safeFolder}`;
     appendLog(`Applying retention (${days} days) on ${remotePath}`);
     try {
-      const output = await execPromise(`rclone lsjson "${remotePath}"`, { timeout: 60000 });
+      const output = await execPromise(getRcloneCommand(`lsjson "${remotePath}"`), {
+        timeout: 60000,
+      });
       const files = JSON.parse(output || "[]");
       for (const file of files) {
         if (!file.IsDir && new Date(file.ModTime).getTime() < cutoff) {
           // file.Path comes from rclone JSON output — escape before use in shell
           const safeFilePath = shellEscapePath(`${remote.name}:${remote.folder || ""}/${file.Path}`);
           appendLog(`Deleting old backup: ${safeFilePath}`);
-          await execPromise(`rclone deletefile "${safeFilePath}"`, { timeout: 30000 }).catch((e) =>
+          await execPromise(getRcloneCommand(`deletefile "${safeFilePath}"`), {
+            timeout: 30000,
+          }).catch((e) =>
             appendLog(`Warning: could not delete ${safeFilePath}: ${e.message}`)
           );
         }
@@ -509,7 +568,7 @@ app.delete("/api/config/remote/:name", (req, res) => {
   saveSettings(settings);
 
   // Remove from rclone config — name is already validated as safe
-  exec(`rclone config delete "${name}"`, () => {});
+  exec(getRcloneCommand(`config delete "${name}"`), () => {});
 
   res.json({ message: `Remote "${name}" deleted.` });
 });
@@ -521,7 +580,7 @@ app.post("/api/config/remote/:name/test", async (req, res) => {
     return res.status(400).json({ error: e.message });
   }
   try {
-    await execPromise(`rclone lsd "${name}:" --max-depth 1`, { timeout: 30000 });
+    await execPromise(getRcloneCommand(`lsd "${name}:" --max-depth 1`), { timeout: 30000 });
     res.json({ success: true, message: `Connection to "${name}" successful.` });
   } catch (e) {
     res.status(422).json({ success: false, error: e.message });
@@ -535,7 +594,9 @@ app.get("/api/config/remote/:name/folders", async (req, res) => {
     return res.status(400).json({ error: e.message });
   }
   try {
-    const output = await execPromise(`rclone lsd "${name}:" --max-depth 1`, { timeout: 30000 });
+    const output = await execPromise(getRcloneCommand(`lsd "${name}:" --max-depth 1`), {
+      timeout: 30000,
+    });
     const folders = output
       .split("\n")
       .filter(Boolean)
@@ -625,15 +686,32 @@ function writeRcloneConfig(remote) {
     if (safeKey) config += `${safeKey} = ${safeVal}\n`;
   }
 
-  // Use crypto for unique temp file name to avoid race conditions
-  const uniqueSuffix = crypto.randomBytes(8).toString("hex");
-  const tmpFile = path.join("/tmp", `.rclone_import_${uniqueSuffix}.conf`);
-  fs.writeFileSync(tmpFile, config, { mode: 0o600 });
+  ensureDir(path.dirname(RCLONE_CONFIG_FILE));
+  let existing = "";
+  try {
+    if (fs.existsSync(RCLONE_CONFIG_FILE)) {
+      existing = fs.readFileSync(RCLONE_CONFIG_FILE, "utf8");
+    }
+  } catch (e) {
+    appendLog(`Warning: could not read rclone config: ${e.message}`);
+  }
 
-  exec(`rclone config update "${remote.name}" --config "${tmpFile}"`, (err) => {
-    try { fs.unlinkSync(tmpFile); } catch {}
-    if (err) appendLog(`Warning: rclone config update for ${remote.name} failed: ${err.message}`);
-  });
+  const sectionHeader = `[${remote.name}]`;
+  const sectionBody = `${sectionHeader}\n${config.split("\n").slice(1).join("\n")}`.trimEnd() + "\n";
+  const sectionRegex = new RegExp(`^\\[${escapeRegExp(remote.name)}\\][\\s\\S]*?(?=^\\[|\\s*$)`, "m");
+  let updated = "";
+  if (sectionRegex.test(existing)) {
+    updated = existing.replace(sectionRegex, sectionBody).trimEnd() + "\n";
+  } else {
+    updated = existing.trimEnd();
+    updated = (updated ? `${updated}\n\n` : "") + sectionBody;
+  }
+
+  try {
+    fs.writeFileSync(RCLONE_CONFIG_FILE, updated, { mode: 0o600 });
+  } catch (e) {
+    appendLog(`Warning: could not write rclone config for ${remote.name}: ${e.message}`);
+  }
 }
 
 // ── Scheduled backups (node-cron) ─────────────────────────────────────────────
