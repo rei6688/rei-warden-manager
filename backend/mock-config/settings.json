@@ -1,0 +1,243 @@
+{
+  "remotes": [
+    {
+      "name": "dropbox",
+      "type": "Dropbox",
+      "folder": "/backup",
+      "credentials": {
+        "clientId": "",
+        "clientSecret": "",
+        "token": "{\"access_token\":\"sl.u.AGVU3N_aIpD_M8E4a4n5quNEo3MbOcUTWKy6jlTjf6zUlZF-cXb_jjXAMOfQgTZGrPr4Fo-cEDPXEad0hcGfK5JojTy6MJgtx7patbAZ4LXXlojdp3uQXXYqJwLL0mvzb4WmbZTq9oIMt_nXN60h-pQDSSxPokpGI_T3OU2nol5oXMprl_3A6-JV_sU7V7cPFERWqYXHJnO1AzgEpxvrcLyjeI-CIPojihSgUFcXwD_GFWcLCI4A1G5lVgzZv22Ad5tIghu91tViYf5o1bxH6LIEzbU8SGofWKoTCo5htSnZcU07yvt1CSIoiwgN_HIslOA4WA99tfKSnvD87dBPxzNAeVC7tuRpsbSORKirXNPs9Cy9zKx6NtL5fabSEEFJbTw9SJpbXZxNlTfk0axZV3J3Sj16_-vXuC5SDagV9qR-0amfK3G9hvycTvXRFZYS3DmE-gl7jA3CsN4UMviv9kj4xmyfxHzhz9V03EjwTh5Fg9LjQlqOrbH-XlV1SiP7JZMa7BKy3i_nNPDCqOGW8ypb2Y5kYu73IbQ6V0jqh97mLGgLJHH_I1o9ncfv-6AdMw6pFeR4nz3DqMq5Zoc6eCMmB4kBSNwEN-3eznyVtX3B8dKp_sjYyHCqGZq7la4rEt-y6RDdXaAG_qtJB2B8lMLSPUi0JqKeLYDvsUI7DcRL_v0Yapzu5iCfs4hkk9s36YojzEGmkWksLsNum14OWPhYhlsxw949qwesrqPu-zx6oi6Ee2VidHEtgMAXlNlLG-MAtALpNpKX3OrDnrpXj3sx6U2f0_BqArsMhwP20QJKTKfmJOVqddB_ESSPj4a5oNsjPdBFjI0S6EM_mfO2rslxr60B-MhBUoBPU_3W4CQW4g32jNeOlqxz1GLJF-F6ufoxWw-h-eQXBzbdpEHNDQPJxRHnt5gJ-RrFPVnyJou0-jzdX3N8BKGQvZHEsOjzat-1jTKV5HwWQLJbuH0p1Lgcxwnx6DR4UzAhJ3EAeYsaDme0w_8lqGg4JFYTfELJKoFX5FlVHwzL81iHmfdM9WQ21uj4yP7FskKm3GaTCtiWKMTEkmpQ-tafnowoYmxnXKLDMCT8t8KqI9eisQAI2SthL96_yog41Huucv6SbJttUCWrN0tsM5xuT8GWI7oWr5hFUHh6tNsiFtcFSn7-5S4XvmoYb8Ci9r3IAXTaVkB4-TvPOfF755EanW7lVk12sOgmJKtrTOx-8vSAQFxwu5QmPpd7hyo2beOq-pCRkpd0vm6pB_6KQchwUXjeK8utkOMD2WtumBI38DdseiIjhMQ_AE2q9w_cvd2QyOAym7YOpw\",\"token_type\":\"bearer\",\"refresh_token\":\"ksZHOPlmulsAAAAAAAAAAQZj-KdcotzbMJ_WGCAMea0XmdyR6K1iTyrt2kdR-ULa\",\"expiry\":\"2026-02-23T21:24:36.370548+07:00\",\"expires_in\":14400}",
+        "appKey": "",
+        "appSecret": "",
+        "tenant": ""
+      }
+    }
+  ],
+  "retention": {
+    "days": 30
+  },
+  "telegram": {},
+  "history": [
+    {
+      "timestamp": "2026-02-23T11:02:03.499Z",
+      "status": "success",
+      "fileName": "backup-2026-02-23T11-02-03-497Z.tar.gz",
+      "fileSize": 43,
+      "duration": 0,
+      "destinations": [
+        "dropbox"
+      ]
+    },
+    {
+      "timestamp": "2026-02-23T11:02:12.549Z",
+      "status": "success",
+      "fileName": "backup-2026-02-23T11-02-12-545Z.tar.gz",
+      "fileSize": 43,
+      "duration": 0,
+      "destinations": [
+        "dropbox"
+      ]
+    },
+    {
+      "timestamp": "2026-02-23T11:03:57.396Z",
+      "status": "success",
+      "fileName": "backup-2026-02-23T11-03-57-395Z.tar.gz",
+      "fileSize": 43,
+      "duration": 0,
+      "destinations": [
+        "dropbox"
+      ]
+    },
+    {
+      "timestamp": "2026-02-23T11:09:25.853Z",
+      "status": "success",
+      "fileName": "backup-2026-02-23T11-09-25-852Z.tar.gz",
+      "fileSize": 43,
+      "duration": 0,
+      "destinations": [
+        "dropbox"
+      ]
+    },
+    {
+      "timestamp": "2026-02-23T11:10:08.280Z",
+      "status": "success",
+      "fileName": "backup-2026-02-23T11-10-08-278Z.tar.gz",
+      "fileSize": 43,
+      "duration": 0,
+      "destinations": [
+        "dropbox"
+      ]
+    },
+    {
+      "timestamp": "2026-02-23T11:10:10.553Z",
+      "status": "success",
+      "fileName": "backup-2026-02-23T11-10-10-552Z.tar.gz",
+      "fileSize": 43,
+      "duration": 0,
+      "destinations": [
+        "dropbox"
+      ]
+    },
+    {
+      "timestamp": "2026-02-23T11:10:12.201Z",
+      "status": "success",
+      "fileName": "backup-2026-02-23T11-10-12-199Z.tar.gz",
+      "fileSize": 43,
+      "duration": 0,
+      "destinations": [
+        "dropbox"
+      ]
+    },
+    {
+      "timestamp": "2026-02-23T13:49:48.964Z",
+      "status": "success",
+      "fileName": "backup-2026-02-23T13-49-48-960Z.tar.gz",
+      "fileSize": 43,
+      "duration": 0,
+      "destinations": [
+        "dropbox"
+      ]
+    },
+    {
+      "timestamp": "2026-02-23T13:49:58.546Z",
+      "status": "success",
+      "fileName": "backup-2026-02-23T13-49-58-545Z.tar.gz",
+      "fileSize": 43,
+      "duration": 0,
+      "destinations": [
+        "dropbox"
+      ]
+    },
+    {
+      "timestamp": "2026-02-23T13:53:38.789Z",
+      "status": "success",
+      "fileName": "backup-2026-02-23T13-53-38-786Z.tar.gz",
+      "fileSize": 43,
+      "duration": 0,
+      "destinations": [
+        "dropbox"
+      ]
+    },
+    {
+      "timestamp": "2026-02-23T13:54:12.649Z",
+      "status": "success",
+      "fileName": "backup-2026-02-23T13-54-12-644Z.tar.gz",
+      "fileSize": 43,
+      "duration": 0,
+      "destinations": [
+        "dropbox"
+      ]
+    },
+    {
+      "timestamp": "2026-02-23T13:54:20.636Z",
+      "status": "success",
+      "fileName": "backup-2026-02-23T13-54-20-634Z.tar.gz",
+      "fileSize": 43,
+      "duration": 0,
+      "destinations": [
+        "dropbox"
+      ]
+    },
+    {
+      "timestamp": "2026-02-23T14:19:55.487Z",
+      "status": "success",
+      "fileName": "backup-2026-02-23T14-19-55-486Z.tar.gz",
+      "fileSize": 43,
+      "duration": 0,
+      "destinations": [
+        "dropbox"
+      ]
+    },
+    {
+      "timestamp": "2026-02-23T14:21:37.885Z",
+      "status": "success",
+      "fileName": "backup-2026-02-23T14-21-37-882Z.tar.gz",
+      "fileSize": 43,
+      "duration": 0,
+      "destinations": [
+        "dropbox"
+      ]
+    },
+    {
+      "timestamp": "2026-02-23T14:33:37.590Z",
+      "status": "success",
+      "fileName": "backup-2026-02-23T14-33-37-589Z.tar.gz",
+      "fileSize": 43,
+      "duration": 0,
+      "destinations": [
+        "dropbox"
+      ]
+    },
+    {
+      "timestamp": "2026-02-23T14:35:56.717Z",
+      "status": "success",
+      "fileName": "backup-2026-02-23T14-35-56-716Z.tar.gz",
+      "fileSize": 43,
+      "duration": 0,
+      "destinations": [
+        "dropbox"
+      ]
+    },
+    {
+      "timestamp": "2026-02-23T14:50:18.468Z",
+      "status": "success",
+      "fileName": "backup-2026-02-23T14-50-18-461Z.tar.gz",
+      "fileSize": 43,
+      "duration": 0,
+      "destinations": [
+        "dropbox"
+      ]
+    },
+    {
+      "timestamp": "2026-02-23T14:50:27.519Z",
+      "status": "success",
+      "fileName": "backup-2026-02-23T14-50-27-508Z.tar.gz",
+      "fileSize": 43,
+      "duration": 0,
+      "destinations": [
+        "dropbox"
+      ]
+    },
+    {
+      "timestamp": "2026-02-23T15:01:55.544Z",
+      "status": "success",
+      "fileName": "backup-2026-02-23T15-01-55-543Z.tar.gz",
+      "fileSize": 43,
+      "duration": 0,
+      "destinations": [
+        "dropbox"
+      ]
+    },
+    {
+      "timestamp": "2026-02-23T15:02:55.239Z",
+      "status": "success",
+      "fileName": "backup-2026-02-23T15-02-55-236Z.tar.gz",
+      "fileSize": 43,
+      "duration": 0,
+      "destinations": [
+        "dropbox"
+      ]
+    },
+    {
+      "timestamp": "2026-02-23T15:04:01.577Z",
+      "status": "success",
+      "fileName": "backup-2026-02-23T15-04-01-576Z.tar.gz",
+      "fileSize": 43,
+      "duration": 0,
+      "destinations": [
+        "dropbox"
+      ]
+    },
+    {
+      "timestamp": "2026-02-23T15:04:46.798Z",
+      "status": "success",
+      "fileName": "backup-2026-02-23T15-04-46-795Z.tar.gz",
+      "fileSize": 43,
+      "duration": 0,
+      "destinations": [
+        "dropbox"
+      ]
+    }
+  ]
+}
