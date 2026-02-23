@@ -102,7 +102,8 @@ docker compose up -d
 | `DATA_DIR` | `/vw-data` | Path to Vaultwarden data directory |
 | `BACKUP_DIR` | `/backups` | Local staging directory for archives |
 | `LOG_FILE` | `/var/log/backup.log` | Path to backup log file |
-| `CONFIG_DIR` | `/config` | Directory for persistent settings (remotes, retention) |
+| `CONFIG_DIR` | `/app/config` | Directory for persistent settings (remotes, retention, password hash) |
+| `RCLONE_CONFIG_FILE` | `/root/.config/rclone/rclone.conf` | Path to the rclone config file used by backend |
 
 ---
 
@@ -147,7 +148,7 @@ docker compose up -d
 
 ## Scheduled Backups
 
-In **Settings**, enter a cron expression (e.g., `0 2 * * *` for 2 AM daily). The schedule is saved to `/config/settings.json` and restored on container restart.
+In **Settings**, enter a cron expression (e.g., `0 2 * * *` for 2 AM daily). The schedule is saved to `/app/config/settings.json` and restored on container restart.
 
 ---
 
@@ -181,7 +182,7 @@ The frontend dev server proxies API requests to `http://localhost:3001` by defau
 |---|---|
 | `vw-data` | Shared with Vaultwarden (mounted read-only in backup manager) |
 | `backups` | Local staging for `.tar.gz` archives |
-| `config` | Persistent settings and rclone configuration |
+| `config` | Persistent settings and rclone configuration (settings.json, rclone.conf) |
 | `logs` | Backup logs |
 
 ---
