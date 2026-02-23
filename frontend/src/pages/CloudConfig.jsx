@@ -3,6 +3,28 @@ import { getRemotes, addRemote, deleteRemote, testRemote } from '../api';
 
 const REMOTE_TYPES = ['Google Drive', 'Dropbox', 'OneDrive'];
 
+const SETUP_GUIDES = {
+  'Google Drive': [
+    'Go to Google Cloud Console → Create a project → Enable "Google Drive API".',
+    'Under "Credentials" → Create OAuth 2.0 Client ID (Desktop app) → copy Client ID and Secret.',
+    'Run `rclone authorize "drive" --client-id YOUR_ID --client-secret YOUR_SECRET` locally to get the OAuth token JSON.',
+    'Paste Client ID, Client Secret, and the token JSON below.',
+  ],
+  'Dropbox': [
+    'Go to https://www.dropbox.com/developers → Create a new app (Full Dropbox access).',
+    'In the app settings, copy the App Key and App Secret.',
+    'Run `rclone authorize "dropbox" --client-id APP_KEY --client-secret APP_SECRET` locally to get the token.',
+    'Paste App Key, App Secret, and the generated token below.',
+  ],
+  'OneDrive': [
+    'Go to Azure Portal → App Registrations → New registration (Accounts in any org directory).',
+    'Under "API permissions" add Microsoft Graph → Files.ReadWrite.All (delegated).',
+    'Under "Certificates & secrets" → New client secret → copy the Client ID and Secret.',
+    'Run `rclone authorize "onedrive" --client-id CLIENT_ID --client-secret CLIENT_SECRET` locally.',
+    'Paste Client ID, Client Secret, and optionally the Tenant ID below.',
+  ],
+};
+
 function emptyForm() {
   return {
     name: '',
@@ -25,6 +47,7 @@ export default function CloudConfig() {
   const [testResults, setTestResults] = useState({});
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState({});
+  const [guideOpen, setGuideOpen] = useState(false);
 
   async function loadRemotes() {
     try {
@@ -40,6 +63,8 @@ export default function CloudConfig() {
   function handleChange(e) {
     const { name, value } = e.target;
     setForm((f) => ({ ...f, [name]: value }));
+    // Reset guide when type changes
+    if (name === 'type') setGuideOpen(false); // Reset guide when switching providers to avoid stale instructions
   }
 
   async function handleAdd(e) {
@@ -51,6 +76,7 @@ export default function CloudConfig() {
       await addRemote(form);
       setSuccess('Remote added successfully');
       setForm(emptyForm());
+      setGuideOpen(false);
       await loadRemotes();
     } catch (err) {
       setError(err.message || 'Failed to add remote');
@@ -177,6 +203,27 @@ export default function CloudConfig() {
             </div>
           </div>
 
+          {/* Setup Guide Accordion */}
+          <div className="border border-blue-700 rounded-lg overflow-hidden">
+            <button
+              type="button"
+              onClick={() => setGuideOpen((o) => !o)}
+              className="w-full flex items-center justify-between px-4 py-2 bg-blue-900/30 text-blue-300 text-xs font-medium hover:bg-blue-900/50 transition-colors"
+            >
+              <span>📖 Setup Guide — {form.type}</span>
+              <span>{guideOpen ? '▲' : '▼'}</span>
+            </button>
+            {guideOpen && (
+              <div className="px-4 py-3 bg-blue-900/10 text-blue-300 text-xs">
+                <ol className="list-decimal list-inside space-y-1">
+                  {(SETUP_GUIDES[form.type] || []).map((step, i) => (
+                    <li key={i}>{step}</li>
+                  ))}
+                </ol>
+              </div>
+            )}
+          </div>
+
           {form.type === 'Google Drive' && (
             <>
               <div className="grid grid-cols-2 gap-4">
@@ -188,9 +235,6 @@ export default function CloudConfig() {
                   <label className={labelCls}>Client Secret</label>
                   <input name="clientSecret" value={form.clientSecret} onChange={handleChange} className={inputCls} placeholder="Google Client Secret" />
                 </div>
-              </div>
-              <div className="p-3 bg-blue-900/30 border border-blue-700 rounded-lg text-blue-300 text-xs">
-                ℹ️ Run <code className="bg-gray-900 px-1 rounded">rclone authorize &quot;drive&quot;</code> locally to get your OAuth token, then paste it below.
               </div>
               <div>
                 <label className={labelCls}>OAuth Token (JSON)</label>

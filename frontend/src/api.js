@@ -105,3 +105,52 @@ export async function saveRetention(data) {
   if (!res.ok) throw new Error('Failed to save retention settings');
   return res.json();
 }
+
+export async function changePassword(data) {
+  const res = await fetch(`${API_BASE}/api/auth/change-password`, {
+    method: 'POST',
+    headers: authHeaders(),
+    body: JSON.stringify(data),
+  });
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(json.error || 'Failed to change password');
+  return json;
+}
+
+export async function getTelegram() {
+  const res = await fetch(`${API_BASE}/api/config/telegram`, { headers: authHeaders() });
+  if (!res.ok) throw new Error('Failed to get Telegram settings');
+  return res.json();
+}
+
+export async function saveTelegram(data) {
+  const res = await fetch(`${API_BASE}/api/config/telegram`, {
+    method: 'POST',
+    headers: authHeaders(),
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error('Failed to save Telegram settings');
+  return res.json();
+}
+
+export async function testTelegram() {
+  const res = await fetch(`${API_BASE}/api/config/telegram/test`, {
+    method: 'POST',
+    headers: authHeaders(),
+  });
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(json.error || 'Telegram test failed');
+  return json;
+}
+
+export async function getBackupHistory() {
+  const res = await fetch(`${API_BASE}/api/backup/history`, { headers: authHeaders() });
+  if (!res.ok) throw new Error('Failed to get backup history');
+  return res.json();
+}
+
+export async function getDiskSpace() {
+  const res = await fetch(`${API_BASE}/api/system/disk`, { headers: authHeaders() });
+  if (!res.ok) throw new Error('Failed to get disk space');
+  return res.json();
+}

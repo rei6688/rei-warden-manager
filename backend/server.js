@@ -10,6 +10,8 @@ const { exec } = require("child_process");
 const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
+const https = require("https");
+const http = require("http");
 
 // ── Environment ───────────────────────────────────────────────────────────────
 const PORT = parseInt(process.env.PORT || "3001", 10);
@@ -74,7 +76,48 @@ function loadSettings() {
   } catch (e) {
     appendLog(`Warning: could not load settings: ${e.message}`);
   }
-  return { remotes: [], retention: { days: 30 } };
+  return { remotes: [], retention: { days: 30 }, telegram: {}, history: [] };
+}
+
+// ── Telegram notification ─────────────────────────────────────────────────────
+function sendTelegramMessage(botToken, chatId, text) {
+  return new Promise((resolve) => {
+    if (!botToken || !chatId) return resolve();
+    const body = JSON.stringify({ chat_id: chatId, text, parse_mode: "HTML" });
+    const options = {
+      hostname: "api.telegram.org",
+      path: `/bot${botToken}/sendMessage`,
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Content-Length": Buffer.byteLength(body) },
+      timeout: 10000,
+    };
+    const req = https.request(options, (res) => {
+      res.resume();
+      resolve();
+    });
+    req.on("error", () => resolve());
+    req.on("timeout", () => { req.destroy(); resolve(); });
+    req.write(body);
+    req.end();
+  });
+}
+
+// ── Disk space helper ─────────────────────────────────────────────────────────
+function getDiskSpace(dir) {
+  const safeDir = shellEscapePath(dir);
+  return new Promise((resolve) => {
+    exec(`df -k "${safeDir}" 2>/dev/null | tail -1`, { timeout: 5000 }, (err, stdout) => {
+      if (err || !stdout) return resolve(null);
+      const parts = stdout.trim().split(/\s+/);
+      if (parts.length < 5) return resolve(null);
+      // df -k columns: Filesystem 1K-blocks Used Available Use% Mountpoint
+      resolve({
+        total: parseInt(parts[1], 10) * 1024,
+        used: parseInt(parts[2], 10) * 1024,
+        available: parseInt(parts[3], 10) * 1024,
+      });
+    });
+  });
 }
 
 function saveSettings(settings) {
@@ -91,7 +134,8 @@ function execPromise(cmd, opts = {}) {
   });
 }
 
-// ── Backup state ──────────────────────────────────────────────────────────────
+// Maximum number of backup history entries to persist
+const MAX_HISTORY_ENTRIES = 50;
 const backupState = {
   running: false,
   lastRun: null,      // ISO string
@@ -138,19 +182,52 @@ app.post("/api/auth/login", authLimiter, async (req, res) => {
   const { password } = req.body || {};
   if (!password) return res.status(400).json({ error: "Password is required." });
 
-  // Support both plain-text and bcrypt-hashed passwords in APP_PASSWORD.
+  // Prefer password hash stored in settings.json; fall back to APP_PASSWORD env var.
+  const settings = loadSettings();
+  const storedPassword = settings.passwordHash || APP_PASSWORD;
+
+  // Support both plain-text and bcrypt-hashed passwords.
   // Detect bcrypt by checking for the full versioned prefix ($2a$, $2b$, $2y$).
   let valid = false;
-  if (/^\$2[aby]\$\d{2}\$/.test(APP_PASSWORD)) {
-    valid = await bcrypt.compare(password, APP_PASSWORD);
+  if (/^\$2[aby]\$\d{2}\$/.test(storedPassword)) {
+    valid = await bcrypt.compare(password, storedPassword);
   } else {
-    valid = password === APP_PASSWORD;
+    valid = password === storedPassword;
   }
 
   if (!valid) return res.status(401).json({ error: "Invalid password." });
 
-  const token = jwt.sign({ sub: "admin" }, JWT_SECRET, { expiresIn: "12h" });
+  const token = jwt.sign({ sub: "admin" }, JWT_SECRET, { expiresIn: "24h" }); // Sessions last 24 hours per security policy
   return res.json({ token });
+});
+
+// ── Change password ────────────────────────────────────────────────────────────
+app.post("/api/auth/change-password", async (req, res) => {
+  const { currentPassword, newPassword } = req.body || {};
+  if (!currentPassword || !newPassword) {
+    return res.status(400).json({ error: "Fields 'currentPassword' and 'newPassword' are required." });
+  }
+  if (newPassword.length < 8) {
+    return res.status(400).json({ error: "New password must be at least 8 characters." });
+  }
+
+  const settings = loadSettings();
+  const storedPassword = settings.passwordHash || APP_PASSWORD;
+
+  let valid = false;
+  if (/^\$2[aby]\$\d{2}\$/.test(storedPassword)) {
+    valid = await bcrypt.compare(currentPassword, storedPassword);
+  } else {
+    valid = currentPassword === storedPassword;
+  }
+
+  if (!valid) return res.status(401).json({ error: "Current password is incorrect." });
+
+  const hash = await bcrypt.hash(newPassword, 12);
+  settings.passwordHash = hash;
+  saveSettings(settings);
+  appendLog("Admin password changed successfully.");
+  return res.json({ message: "Password changed successfully." });
 });
 
 // ── Protect all other /api/* routes ──────────────────────────────────────────
@@ -220,7 +297,11 @@ app.post("/api/backup/run", (req, res) => {
 
 async function runBackup(settings) {
   backupState.running = true;
+  const startTime = Date.now();
   appendLog("=== Backup started ===");
+
+  let archiveName = "";
+  let archiveSizeBytes = 0;
 
   try {
     // 1. Check rclone availability
@@ -233,7 +314,7 @@ async function runBackup(settings) {
 
     // 3. Create tar.gz with timestamp
     const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
-    const archiveName = `backup-${timestamp}.tar.gz`;
+    archiveName = `backup-${timestamp}.tar.gz`;
     const archivePath = path.join(BACKUP_DIR, archiveName);
 
     appendLog(`Creating archive: ${archivePath}`);
@@ -244,6 +325,11 @@ async function runBackup(settings) {
       timeout: 600000, // 10 min
     });
     appendLog(`Archive created successfully.`);
+
+    // Get archive size
+    try { archiveSizeBytes = fs.statSync(archivePath).size; } catch (e) {
+      appendLog(`Warning: could not read archive size: ${e.message}`);
+    }
 
     // 4. Upload to each configured remote
     for (const remote of settings.remotes) {
@@ -260,17 +346,79 @@ async function runBackup(settings) {
     await applyRetention(settings.remotes, retentionDays);
 
     // 6. Update state
+    const duration = Math.round((Date.now() - startTime) / 1000);
     backupState.lastRun = new Date().toISOString();
     backupState.lastStatus = "success";
     backupState.lastMessage = `Backup completed: ${archiveName}`;
     appendLog("=== Backup finished successfully ===");
+
+    // 7. Record history
+    addHistory({
+      timestamp: backupState.lastRun,
+      status: "success",
+      fileName: archiveName,
+      fileSize: archiveSizeBytes,
+      duration,
+      destinations: (settings.remotes || []).map((r) => r.name),
+    });
+
+    // 8. Send Telegram notification
+    const tg = settings.telegram || {};
+    if (tg.botToken && tg.chatId) {
+      const sizeMB = (archiveSizeBytes / (1024 * 1024)).toFixed(2);
+      const dests = (settings.remotes || []).map((r) => r.name).join(", ") || "None";
+      const msg =
+        `✅ <b>Backup Successful</b>\n` +
+        `📁 <b>File:</b> ${archiveName}\n` +
+        `📦 <b>Size:</b> ${sizeMB} MB\n` +
+        `☁️ <b>Destination:</b> ${dests}\n` +
+        `⏱ <b>Duration:</b> ${duration}s`;
+      sendTelegramMessage(tg.botToken, tg.chatId, msg).catch(() => {});
+    }
   } catch (err) {
+    const duration = Math.round((Date.now() - startTime) / 1000);
     backupState.lastRun = new Date().toISOString();
     backupState.lastStatus = "error";
     backupState.lastMessage = err.message;
     appendLog(`=== Backup failed: ${err.message} ===`);
+
+    // Record history
+    addHistory({
+      timestamp: backupState.lastRun,
+      status: "error",
+      fileName: archiveName || "",
+      fileSize: 0,
+      duration,
+      destinations: (settings.remotes || []).map((r) => r.name),
+      error: err.message,
+    });
+
+    // Send Telegram failure notification
+    const tg = settings.telegram || {};
+    if (tg.botToken && tg.chatId) {
+      const dests = (settings.remotes || []).map((r) => r.name).join(", ") || "None";
+      const msg =
+        `❌ <b>Backup Failed</b>\n` +
+        `☁️ <b>Destination:</b> ${dests}\n` +
+        `⏱ <b>Duration:</b> ${duration}s\n` +
+        `⚠️ <b>Error:</b> ${err.message}`;
+      sendTelegramMessage(tg.botToken, tg.chatId, msg).catch(() => {});
+    }
   } finally {
     backupState.running = false;
+  }
+}
+
+function addHistory(entry) {
+  try {
+    const settings = loadSettings();
+    const history = settings.history || [];
+    history.push(entry);
+    // Keep last MAX_HISTORY_ENTRIES entries
+    settings.history = history.slice(-MAX_HISTORY_ENTRIES);
+    saveSettings(settings);
+  } catch (e) {
+    appendLog(`Warning: could not save backup history: ${e.message}`);
   }
 }
 
@@ -417,6 +565,49 @@ app.post("/api/config/retention", (req, res) => {
   saveSettings(settings);
   applySchedule(settings.retention.cron);
   res.json({ message: "Retention policy saved.", days: settings.retention.days, cron: settings.retention.cron });
+});
+
+// ── Telegram – get ────────────────────────────────────────────────────────────
+app.get("/api/config/telegram", (req, res) => {
+  const settings = loadSettings();
+  const t = settings.telegram || {};
+  res.json({ botToken: t.botToken ? "***" : "", chatId: t.chatId || "", enabled: Boolean(t.botToken && t.chatId) });
+});
+
+// ── Telegram – set ────────────────────────────────────────────────────────────
+app.post("/api/config/telegram", (req, res) => {
+  const { botToken, chatId } = req.body || {};
+  const settings = loadSettings();
+  settings.telegram = { botToken: botToken || "", chatId: chatId || "" };
+  saveSettings(settings);
+  res.json({ message: "Telegram settings saved.", enabled: Boolean(botToken && chatId) });
+});
+
+// ── Telegram – test ───────────────────────────────────────────────────────────
+app.post("/api/config/telegram/test", async (req, res) => {
+  const settings = loadSettings();
+  const { botToken, chatId } = settings.telegram || {};
+  if (!botToken || !chatId) {
+    return res.status(422).json({ error: "Telegram is not configured. Please save Bot Token and Chat ID first." });
+  }
+  try {
+    await sendTelegramMessage(botToken, chatId, "🔔 <b>Rei-Warden Test</b>\nTelegram notifications are working!");
+    res.json({ success: true, message: "Test message sent successfully." });
+  } catch (e) {
+    res.status(422).json({ success: false, error: e.message });
+  }
+});
+
+// ── Backup history ────────────────────────────────────────────────────────────
+app.get("/api/backup/history", (req, res) => {
+  const settings = loadSettings();
+  res.json({ history: (settings.history || []).slice(-10).reverse() });
+});
+
+// ── Disk space ────────────────────────────────────────────────────────────────
+app.get("/api/system/disk", async (req, res) => {
+  const disk = await getDiskSpace(BACKUP_DIR).catch(() => null);
+  res.json(disk || { total: 0, used: 0, available: 0 });
 });
 
 // ── rclone config writer ──────────────────────────────────────────────────────
