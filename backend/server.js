@@ -411,8 +411,10 @@ app.post("/api/backup/run", (req, res) => {
   }
 
   // Validate prerequisites
-  if (!fs.existsSync(DATA_DIR)) {
-    return res.status(422).json({ error: `DATA_DIR "${DATA_DIR}" does not exist.` });
+  try {
+    ensureDir(DATA_DIR);
+  } catch (e) {
+    return res.status(422).json({ error: `Cannot create DATA_DIR "${DATA_DIR}": ${e.message}` });
   }
 
   const settings = loadSettings();
