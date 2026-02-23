@@ -1,0 +1,19 @@
+{
+  "name": "rei-warden-manager",
+  "version": "1.0.0",
+  "description": "A full-stack web application to manage and monitor [Vaultwarden](https://github.com/dani-garcia/vaultwarden) backups to cloud storage providers via [rclone](https://rclone.org/).",
+  "main": "index.js",
+  "scripts": {
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:backend": "cross-env NODE_ENV=development PORT=3001 node backend/server.js",
+    "dev:frontend": "cd frontend && npm run dev",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "concurrently": "^9.2.1",
+    "cross-env": "^10.1.0"
+  }
+}
