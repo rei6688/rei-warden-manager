@@ -16,10 +16,23 @@ backend/.env
 
 # OS
 .DS_Store
+Thumbs.db
 
-# rclone temp files
-/tmp/.rclone_import_*.conf
+# Mocks & Local Data
+mock-*/
+config/settings.json
+config/rclone.conf
+backups/
 
-# Editor
-.vscode/
-.idea/
+# Rclone
+rclone.conf
+
+# pnpm
+pnpm-lock.yaml
+pnpm-debug.log*
+
+# Node modules
+node_modules/
+**/node_modules/
+package-lock.json
+yarn.lock
