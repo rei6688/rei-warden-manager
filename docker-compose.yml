@@ -22,11 +22,11 @@ services:
     container_name: rei-warden-manager
     restart: unless-stopped
     volumes:
-      - vw-data:/vw-data:ro          # Vaultwarden data (read-only for backup)
-      - backups:/backups              # Local backup staging
-      - config:/app/config            # Persistent settings & password hash
-      - rclone-config:/root/.config/rclone  # Rclone configuration
-      - logs:/var/log                 # Log persistence
+      - vw-data:/vw-data:ro # Vaultwarden data (read-only for backup)
+      - backups:/backups # Local backup staging
+      - config:/app/config # Persistent settings & password hash
+      - rclone-config:/root/.config/rclone # Rclone configuration
+      - logs:/var/log # Log persistence
     environment:
       PORT: 3001
       # APP_PASSWORD is only used for the very first login if no settings exist.

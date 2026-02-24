@@ -145,7 +145,7 @@ function loadSettings() {
   // Default structure
   return {
     remotes: [],
-    retention: { days: 30 },
+    retention: { days: 30, cron: "0 0 * * *" },
     telegram: {},
     history: [],
     user: { email: RECOVERY_EMAIL, passwordHash: "", isDefault: true }

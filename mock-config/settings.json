@@ -5,7 +5,12 @@
       "type": "Dropbox",
       "folder": "/backups",
       "credentials": {
-        "token": "{\"access_token\":\"mock_token\"}"
+        "clientId": "",
+        "clientSecret": "",
+        "token": "{\"access_token\":\"sl.u.AGXSE1x9ccFaNtY_IP26WlWQBcI354yKGqsxEQj88ADDYU4SYJTlQT1SIUouSnrY0jiq_VEvpMopJrcd3G3rBAB_l7lE3uRSWxqpl94QpPPXo49dkyfxdouKz4dXcYYWxr3bcdn3I1s-t36SmXdeOX9IBBU3HTaaYda3StsSiYRNf7jpyCud7Ivn8a_PkZ3FimYwiCPN7kKsfBYy5o0dahrPvZzPr6Ji1mbT-cTL3m5bnOrD_rSbJx7Ta86PmjjiEP3YcT9IB8XO_cwVDPgkMsEzabI3OQdadwPFcZsagODqZy39OAgXvQxHP9OjXhUiacYtah6H7SqGSV4P4hj5y9yg-w565MEommcgZyHWo0A6uIfQ8RaDjQiJLc0cWHT07t_fKmzhAcLJWX5os1_sOwc8Rwzl_cyTqVM4rnJMHDggKOqa1yK1PzPossgl3I0w_NtEoAePT8I3YVIkDeRSSw8x-Nhse1yKKKvZsuOE1G_eeZ8pV3r0Oi76twnI-6YysWItCAFTQF0aVptZhgr3GluyP6F6kJQtC3nzq6sz-0QIeOJXwCuUH1GT6UwFtivniyEZs_BzwXpWhQjdmF3-z8uBofVY2QZislLncmryBqYo1aH3NFummQpypd3UZoOuHtMk-ERXrlWF6UCT19s78vp0uawyLbtu_N0SpNtVoJaUdziRtpGXtMSTqC4xfYuZsEr5uOBsLs1mCEvZcTVObHgnjpw69FNdflCrVcoDwrtrx0zxTsPp_d12-4c_QIILaUwwY2dYuj3YZQXofncJ95zVTOO-DOwOiNSFJwDL0de_c4k3YH-BPHOv85DCrWl1Q6xvfEtyjEE6lWNZUDqCGdXToDC1VZQXbGwPSsogHY_La752oxTeJW8asEVZ2pi8utQ0bLemyTH-F32UJ63Lf-uu22Bq9wu5mFT8X99YZcl2baJWG7HvVZB4uSxCz9QXeDLeE4nxXhpW5vCQawb05P78JHAMVs6LRshekdhBvVzQu-ljelM0y0UMQi4egKun041u5LpF7PECoGz0_kVCB5xtXAtutdgdapNhrqw7iE5ZMh291bUhwWFd96w_mCmdZKGPPH5nIq02P38EWzPX2c-c3-p2V4Sv1s_CX8D4BUpNiRwWwNh6QBRBd8hHh49iTMDL7DvhcCeXgDbFioHNeE3-37XRvw2ads5TaTXOpdFqNZ_WNQiqi0npKDBvV1rmWy2CtZ2ihGs0J_bLAhdu0lvsyS6OXy-pygqKpIwaqOHW9R7qed8LZaKdGmY4CYD0UOZYIHTB9RZ2fT_N2fBQIvFWeOX2_FcRSEuye6DV5_3YrQ\",\"token_type\":\"bearer\",\"refresh_token\":\"i4j1NUi9IrwAAAAAAAAAAZ5lzGvNN9AUBItAmESguKUZGngeHfLFfvQ-n9ncrISM\",\"expiry\":\"2026-02-24T12:55:21.9273726+07:00\",\"expires_in\":14399}",
+        "appKey": "",
+        "appSecret": "",
+        "tenant": ""
       }
     }
   ],
@@ -23,6 +28,265 @@
       "destinations": [
         "test_dropbox"
       ]
+    },
+    {
+      "timestamp": "2026-02-24T01:35:26.240Z",
+      "status": "success",
+      "fileName": "backup-2026-02-24T01-35-26-231Z.tar.gz",
+      "fileSize": 43,
+      "duration": 0,
+      "destinations": [
+        "test_dropbox"
+      ]
+    },
+    {
+      "timestamp": "2026-02-24T01:43:48.997Z",
+      "status": "success",
+      "fileName": "backup-2026-02-24T01-43-48-976Z.tar.gz",
+      "fileSize": 43,
+      "duration": 0,
+      "destinations": [
+        "test_dropbox"
+      ]
+    },
+    {
+      "timestamp": "2026-02-24T01:56:19.079Z",
+      "status": "success",
+      "fileName": "backup-2026-02-24T01-56-19-072Z.tar.gz",
+      "fileSize": 43,
+      "duration": 0,
+      "destinations": [
+        "test_dropbox"
+      ]
+    },
+    {
+      "timestamp": "2026-02-24T01:56:19.911Z",
+      "status": "success",
+      "fileName": "backup-2026-02-24T01-56-19-904Z.tar.gz",
+      "fileSize": 43,
+      "duration": 0,
+      "destinations": [
+        "test_dropbox"
+      ]
+    },
+    {
+      "timestamp": "2026-02-24T01:56:20.110Z",
+      "status": "success",
+      "fileName": "backup-2026-02-24T01-56-20-104Z.tar.gz",
+      "fileSize": 43,
+      "duration": 0,
+      "destinations": [
+        "test_dropbox"
+      ]
+    },
+    {
+      "timestamp": "2026-02-24T01:56:20.282Z",
+      "status": "success",
+      "fileName": "backup-2026-02-24T01-56-20-274Z.tar.gz",
+      "fileSize": 43,
+      "duration": 0,
+      "destinations": [
+        "test_dropbox"
+      ]
+    },
+    {
+      "timestamp": "2026-02-24T01:56:20.478Z",
+      "status": "success",
+      "fileName": "backup-2026-02-24T01-56-20-472Z.tar.gz",
+      "fileSize": 43,
+      "duration": 0,
+      "destinations": [
+        "test_dropbox"
+      ]
+    },
+    {
+      "timestamp": "2026-02-24T01:56:20.947Z",
+      "status": "success",
+      "fileName": "backup-2026-02-24T01-56-20-939Z.tar.gz",
+      "fileSize": 43,
+      "duration": 0,
+      "destinations": [
+        "test_dropbox"
+      ]
+    },
+    {
+      "timestamp": "2026-02-24T01:56:21.296Z",
+      "status": "success",
+      "fileName": "backup-2026-02-24T01-56-21-289Z.tar.gz",
+      "fileSize": 43,
+      "duration": 0,
+      "destinations": [
+        "test_dropbox"
+      ]
+    },
+    {
+      "timestamp": "2026-02-24T03:58:27.521Z",
+      "status": "error",
+      "fileName": "backup-2026-02-24T03-58-27-516Z.tar.gz",
+      "fileSize": 0,
+      "duration": 0,
+      "destinations": [
+        "test_dropbox"
+      ],
+      "error": "safeArchive is not defined"
+    },
+    {
+      "timestamp": "2026-02-24T04:02:18.987Z",
+      "status": "error",
+      "fileName": "backup-2026-02-24T04-02-18-983Z.tar.gz",
+      "fileSize": 0,
+      "duration": 0,
+      "destinations": [
+        "test_dropbox"
+      ],
+      "error": "safeArchive is not defined"
+    },
+    {
+      "timestamp": "2026-02-24T04:02:37.360Z",
+      "status": "error",
+      "fileName": "backup-2026-02-24T04-02-37-356Z.tar.gz",
+      "fileSize": 0,
+      "duration": 0,
+      "destinations": [
+        "test_dropbox"
+      ],
+      "error": "safeArchive is not defined"
+    },
+    {
+      "timestamp": "2026-02-24T04:02:38.178Z",
+      "status": "error",
+      "fileName": "backup-2026-02-24T04-02-38-174Z.tar.gz",
+      "fileSize": 0,
+      "duration": 0,
+      "destinations": [
+        "test_dropbox"
+      ],
+      "error": "safeArchive is not defined"
+    },
+    {
+      "timestamp": "2026-02-24T04:02:38.857Z",
+      "status": "error",
+      "fileName": "backup-2026-02-24T04-02-38-854Z.tar.gz",
+      "fileSize": 0,
+      "duration": 0,
+      "destinations": [
+        "test_dropbox"
+      ],
+      "error": "safeArchive is not defined"
+    },
+    {
+      "timestamp": "2026-02-24T04:02:39.091Z",
+      "status": "error",
+      "fileName": "backup-2026-02-24T04-02-39-074Z.tar.gz",
+      "fileSize": 0,
+      "duration": 0,
+      "destinations": [
+        "test_dropbox"
+      ],
+      "error": "safeArchive is not defined"
+    },
+    {
+      "timestamp": "2026-02-24T04:02:39.265Z",
+      "status": "error",
+      "fileName": "backup-2026-02-24T04-02-39-261Z.tar.gz",
+      "fileSize": 0,
+      "duration": 0,
+      "destinations": [
+        "test_dropbox"
+      ],
+      "error": "safeArchive is not defined"
+    },
+    {
+      "timestamp": "2026-02-24T04:02:39.521Z",
+      "status": "error",
+      "fileName": "backup-2026-02-24T04-02-39-517Z.tar.gz",
+      "fileSize": 0,
+      "duration": 0,
+      "destinations": [
+        "test_dropbox"
+      ],
+      "error": "safeArchive is not defined"
+    },
+    {
+      "timestamp": "2026-02-24T04:09:44.362Z",
+      "status": "error",
+      "fileName": "backup-2026-02-24T04-09-44-355Z.tar.gz",
+      "fileSize": 0,
+      "duration": 0,
+      "destinations": [
+        "test_dropbox"
+      ],
+      "error": "safeArchive is not defined"
+    },
+    {
+      "timestamp": "2026-02-24T04:10:22.694Z",
+      "status": "error",
+      "fileName": "backup-2026-02-24T04-10-22-690Z.tar.gz",
+      "fileSize": 0,
+      "duration": 0,
+      "destinations": [
+        "test_dropbox"
+      ],
+      "error": "safeArchive is not defined"
+    },
+    {
+      "timestamp": "2026-02-24T04:10:23.305Z",
+      "status": "error",
+      "fileName": "backup-2026-02-24T04-10-23-301Z.tar.gz",
+      "fileSize": 0,
+      "duration": 0,
+      "destinations": [
+        "test_dropbox"
+      ],
+      "error": "safeArchive is not defined"
+    },
+    {
+      "timestamp": "2026-02-24T04:10:24.574Z",
+      "status": "error",
+      "fileName": "backup-2026-02-24T04-10-24-567Z.tar.gz",
+      "fileSize": 0,
+      "duration": 0,
+      "destinations": [
+        "test_dropbox"
+      ],
+      "error": "safeArchive is not defined"
+    },
+    {
+      "timestamp": "2026-02-24T04:10:25.095Z",
+      "status": "error",
+      "fileName": "backup-2026-02-24T04-10-25-090Z.tar.gz",
+      "fileSize": 0,
+      "duration": 0,
+      "destinations": [
+        "test_dropbox"
+      ],
+      "error": "safeArchive is not defined"
+    },
+    {
+      "timestamp": "2026-02-24T04:10:25.714Z",
+      "status": "error",
+      "fileName": "backup-2026-02-24T04-10-25-711Z.tar.gz",
+      "fileSize": 0,
+      "duration": 0,
+      "destinations": [
+        "test_dropbox"
+      ],
+      "error": "safeArchive is not defined"
+    },
+    {
+      "timestamp": "2026-02-24T04:14:36.192Z",
+      "status": "success",
+      "fileName": "backup-2026-02-24T04-14-31-321Z.tar.gz",
+      "fileSize": 43,
+      "duration": 5,
+      "destinations": [
+        "test_dropbox"
+      ]
     }
-  ]
+  ],
+  "user": {
+    "email": "namnt05@gmail.com",
+    "passwordHash": "$2a$12$Erqlq5s.sZwsEYI7YNiD1ustSh6BvwDB//.2kiz/NfWxhLQ8x9LNa",
+    "isDefault": false
+  }
 }
